@@ -2,9 +2,9 @@
 
 # 🏗️ terraform-provider-laravelforge
 
-**Manage your [Laravel Forge](https://forge.laravel.com) estate as code — servers, sites, SSL, daemons & more, reconciled by OpenTofu**
+**Manage your entire [Laravel Forge](https://forge.laravel.com) estate as code — servers, sites, databases, daemons, SSL & more, reconciled by OpenTofu**
 
-[![Status: experimental](https://img.shields.io/badge/status-experimental-f59e0b?style=flat-square)](https://github.com/kirchDev/terraform-provider-laravelforge)
+[![Status: beta](https://img.shields.io/badge/status-beta-f59e0b?style=flat-square)](https://github.com/kirchDev/terraform-provider-laravelforge)
 [![CI](https://img.shields.io/github/actions/workflow/status/kirchDev/terraform-provider-laravelforge/ci.yml?branch=main&style=flat-square&label=ci)](https://github.com/kirchDev/terraform-provider-laravelforge/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-10b981?style=flat-square)](LICENSE)
 
@@ -14,25 +14,19 @@
 
 ```hcl
 resource "laravelforge_site" "app" {
-  server_id = laravelforge_server.web.id
-  domain    = "app.example.com"
+  organization = "your-org"
+  server_id    = laravelforge_server.web.id
+  type         = "php"
+  name         = "app.example.com"
 }
 ```
 
-That's it. Laravel Forge servers, sites, SSL and daemons declared in HCL and reconciled by OpenTofu — not clicked together in a dashboard.
+That's it. Servers, sites, databases, daemons and SSL declared in HCL and reconciled by OpenTofu — not clicked together in a dashboard.
 
 > [!IMPORTANT]
-> **Early development, pre-1.0.** The provider is being built out resource by resource and is **not yet published** to the OpenTofu registry. Schemas and behaviour may change without notice until `v1.0.0`. See the Roadmap section below for current coverage.
+> **Pre-1.0 / beta.** Built against the new org-scoped Forge JSON:API. All schemas load and **reads are verified against the live API**, but **writes (create/update/delete) are not yet acceptance-tested** and only scalar attributes are mapped — pin an exact version and test before relying on it. Not yet on the OpenTofu registry.
 
-## ✨ Features
-
-- **🏗️ Forge as code** — declare servers, sites, databases, SSL certificates, daemons and scheduled jobs in HCL instead of the dashboard.
-- **🧩 Generated from the OpenAPI** — resource schemas are derived from Forge's official API spec, so coverage tracks the upstream API.
-- **🚀 OpenTofu-native** — published as `kirchdev/laravelforge`; works with Terraform too.
-- **🔐 Simple auth** — a single Forge API token via the `token` argument or `FORGE_TOKEN`.
-- **⚡ Modern stack** — built on the `terraform-plugin-framework` (not legacy SDKv2).
-
-## 📦 Installation
+## 📦 Install & run
 
 ```hcl
 terraform {
@@ -43,25 +37,11 @@ terraform {
     }
   }
 }
-```
 
-> [!NOTE]
-> Until the first registry release lands, install via a local/network mirror or a `dev_overrides` block pointing at a locally built binary.
-
-## 🚀 Setup
-
-```hcl
 provider "laravelforge" {
-  token = var.forge_token # or set FORGE_TOKEN in the environment
+  token = var.forge_token # or set FORGE_TOKEN
 }
 
-# Read an existing server
-data "laravelforge_server" "web" {
-  organization = "your-org"
-  id           = 123456
-}
-
-# Manage a site on it
 resource "laravelforge_site" "app" {
   organization = "your-org"
   server_id    = data.laravelforge_server.web.id
@@ -71,44 +51,47 @@ resource "laravelforge_site" "app" {
 }
 ```
 
-Generate a Forge API token under **Forge → Account → API**, then export it:
-
 ```bash
-export FORGE_TOKEN="forge_xxx"
+export FORGE_TOKEN="forge_xxx"   # Forge → Account → API
 tofu plan
 ```
 
+> [!NOTE]
+> Until the first registry release, install via a local/network mirror or a `dev_overrides` block pointing at a locally built binary (`make build`).
+
+## ✨ Features
+
+- **🏗️ Forge as code** — servers, sites, databases, daemons, scheduled jobs, SSL and more in HCL.
+- **🧩 Full API coverage** — ~57 resources + ~83 data sources across essentially every manageable Forge entity.
+- **🚀 OpenTofu-native** — `kirchdev/laravelforge`; Terraform-compatible.
+- **🔐 Simple auth** — one Forge token via `token` or `FORGE_TOKEN`.
+- **⚡ Modern stack** — `terraform-plugin-framework`; docs generated from the schema.
+
 ## 🗺️ Coverage
 
-**~57 resources + ~83 data sources** — every manageable entity of the new
-org-scoped Forge API (pure action endpoints like reboot/restart/deploy-trigger
-are intentionally excluded). All schemas compile and load (`tofu validate`);
-**reads** are verified against the live API.
+~57 resources + ~83 data sources covering essentially every manageable Forge entity (pure actions like reboot / restart / deploy-trigger are intentionally excluded).
 
-- **Servers** — server, PHP versions & config (cli/fpm/pool/opcache, max upload/exec), network, logs.
-- **Sites** — site, environment, deployments (script, key, push-to-deploy, history), commands, workers, redirect & security rules, SSL certificates, load balancing, webhooks, and integration toggles (`octane`, `horizon`, `pulse`, `reverb`, `laravel-scheduler`, `laravel-maintenance`, `inertia`).
+<details>
+<summary>Full coverage</summary>
+
+- **Servers** — server, PHP versions & config (cli/fpm/pool/opcache, max upload & execution), network, logs.
+- **Sites** — site, environment, deployments (script, key, push-to-deploy, history), commands, workers, redirect & security rules, SSL, load balancing, webhooks, and integration toggles (`octane`, `horizon`, `pulse`, `reverb`, `laravel-scheduler`, `laravel-maintenance`, `inertia`).
 - **Services** — daemons (background processes), scheduled jobs, firewall rules, databases, database users, database backups, nginx templates, monitors, SSH keys.
 - **Organization** — teams, roles & permissions, recipes, storage providers, server credentials, VPCs.
-- **Read-only data sources** — providers / regions / sizes, organizations, current user, plus a singular + (where available) reads for everything above.
+- **Data sources** — a read for everything above plus providers / regions / sizes, organizations and the current user.
 
-> [!IMPORTANT]
-> **Writes (create/update/delete) are not yet acceptance-tested.** Routes and
-> field shapes come from the live API + the official OpenAPI spec, but the
-> verification token was read-only, so `Create`/`Update`/`Delete` need a
-> write-scoped token to validate. Treat resources as **beta** until then.
-> Only scalar attributes are mapped so far; nested object/array fields are a
-> follow-up.
+</details>
 
-## 🔐 Security
+## 📚 Documentation
 
-Found a vulnerability? Please **don't** open a public issue — follow [SECURITY.md](SECURITY.md).
+Per-resource docs live under [`docs/`](docs/), generated from the schema with `make docs` (build + export schema + tfplugindocs).
 
 ## 🤝 Contributing
 
-PRs welcome. Conventional Commits required (enforced via commitlint). Husky runs the project's linters/formatters on `git commit`.
+PRs welcome. Conventional Commits required (enforced via commitlint). Husky runs the linters/formatters on `git commit`.
 
 > [!TIP]
-> Run `pnpm check:fix` before pushing — CI will catch what husky missed.
+> Run `make build && go vet ./...` before pushing — CI will catch what husky missed.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the full workflow.
 
