@@ -2,3 +2,26 @@ node_modules
 .DS_Store
 .idea
 .vscode
+
+# Go
+/terraform-provider-laravelforge
+/dist/
+*.test
+*.out
+
+# OpenTofu / Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+
+# Local provider dev overrides
+.terraformrc
+terraform.rc
+
+# Workflow build scripts (AI orchestration, not part of the provider)
+.workflow-*.js
+
+# Forge OpenAPI spec (reference for codegen, not shipped)
+.forge-openapi.json

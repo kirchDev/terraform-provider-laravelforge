@@ -1,87 +1,107 @@
 <div align="center">
 
-# 🏗️ scaffold
+# 🏗️ terraform-provider-laravelforge
 
-**The kirchDev baseline — everything a new repo should ship with on day one, nothing more**
+**Manage your [Laravel Forge](https://forge.laravel.com) estate as code — servers, sites, SSL, daemons & more, reconciled by OpenTofu**
+
+[![Status: experimental](https://img.shields.io/badge/status-experimental-f59e0b?style=flat-square)](https://github.com/kirchDev/terraform-provider-laravelforge)
+[![CI](https://img.shields.io/github/actions/workflow/status/kirchDev/terraform-provider-laravelforge/ci.yml?branch=main&style=flat-square&label=ci)](https://github.com/kirchDev/terraform-provider-laravelforge/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-10b981?style=flat-square)](LICENSE)
 
 </div>
 
 ---
 
-```bash
-gh repo create my-new-repo --template TitusKirch/scaffold
+```hcl
+resource "laravelforge_site" "app" {
+  server_id = laravelforge_server.web.id
+  domain    = "app.example.com"
+}
 ```
 
-That's it. Click **Use this template** (or use `gh`), edit a handful of placeholders, and the meta layer — lint, format, commit hooks, CI, CodeQL, Dependabot, release-please — is already wired up.
+That's it. Laravel Forge servers, sites, SSL and daemons declared in HCL and reconciled by OpenTofu — not clicked together in a dashboard.
 
-## ✨ What's in the box
+> [!IMPORTANT]
+> **Early development, pre-1.0.** The provider is being built out resource by resource and is **not yet published** to the OpenTofu registry. Schemas and behaviour may change without notice until `v1.0.0`. See the Roadmap section below for current coverage.
 
-- **🟢 Node + pnpm pinned** — `.nvmrc` (Node 24), `.npmrc` (pnpm 11 with sane defaults), `package.json` with `packageManager`.
-- **🧹 Lint & format via oxc** — `.oxlintrc.json`, `.oxfmtrc.json`, single `pnpm check` gate.
-- **🪝 Commit hooks** — Husky + `lint-staged` + `commitlint` enforcing Conventional Commits.
-- **🤖 Dependency PRs** — Dependabot (npm weekly, actions monthly) + `taze.config.js` for interactive upgrades.
-- **🔁 release-please** — full workflow + config + manifest so the new repo can publish from its first commit.
-- **🛡️ GitHub workflows** — `ci.yml` (lint + format check on PR), `codeql.yml` (push/PR + weekly).
-- **📋 Issue / PR templates** — bug report, feature request, question (`.yml` forms) + PR checklist.
-- **📄 Standard meta** — `LICENSE`, `CODE_OF_CONDUCT.md`, `CONTRIBUTING.md`, `SECURITY.md`.
+## ✨ Features
 
-The actual project code can be anything — PHP, Go, Rust, Vue, plain shell. `scaffold` only owns the meta layer that sits on top.
+- **🏗️ Forge as code** — declare servers, sites, databases, SSL certificates, daemons and scheduled jobs in HCL instead of the dashboard.
+- **🧩 Generated from the OpenAPI** — resource schemas are derived from Forge's official API spec, so coverage tracks the upstream API.
+- **🚀 OpenTofu-native** — published as `kirchdev/laravelforge`; works with Terraform too.
+- **🔐 Simple auth** — a single Forge API token via the `token` argument or `FORGE_TOKEN`.
+- **⚡ Modern stack** — built on the `terraform-plugin-framework` (not legacy SDKv2).
+
+## 📦 Installation
+
+```hcl
+terraform {
+  required_providers {
+    laravelforge = {
+      source  = "kirchdev/laravelforge"
+      version = "~> 0.1"
+    }
+  }
+}
+```
+
+> [!NOTE]
+> Until the first registry release lands, install via a local/network mirror or a `dev_overrides` block pointing at a locally built binary.
 
 ## 🚀 Setup
 
-After clicking **Use this template**:
+```hcl
+provider "laravelforge" {
+  token = var.forge_token # or set FORGE_TOKEN in the environment
+}
 
-1. Clone your new repo.
-2. Replace the placeholders listed in [Customising the template](#-customising-the-template).
-3. Reset release-please as described in [Resetting release-please](#-resetting-release-please) (only if you want to start at `v0.0.0`).
-4. `pnpm install` — Husky activates the hooks via the `prepare` script.
-5. Add your project code and ship the first commit:
+# Read an existing server
+data "laravelforge_server" "web" {
+  organization = "your-org"
+  id           = 123456
+}
 
-   ```bash
-   git commit -m "chore: initial commit from scaffold"
-   ```
+# Manage a site on it
+resource "laravelforge_site" "app" {
+  organization = "your-org"
+  server_id    = data.laravelforge_server.web.id
+  type         = "php"
+  name         = "app.example.com"
+  php_version  = "php82"
+}
+```
 
-## 🧰 Customising the template
+Generate a Forge API token under **Forge → Account → API**, then export it:
 
-Every file below references `TitusKirch/scaffold`, the maintainer's name, or the maintainer's email. Search-and-replace these to your repo's identity before the first push.
+```bash
+export FORGE_TOKEN="forge_xxx"
+tofu plan
+```
 
-| File                                  | Replace                                                                          |
-| :------------------------------------ | :------------------------------------------------------------------------------- |
-| `package.json`                        | `name`, `description`, `homepage`, `bugs.url`, `repository.url`, `author`        |
-| `README.md`                           | Project title, tagline, hook snippet, every `TitusKirch/scaffold` link           |
-| `LICENSE`                             | Copyright year + holder                                                          |
-| `CODE_OF_CONDUCT.md`                  | Enforcement contact email                                                        |
-| `CONTRIBUTING.md`                     | Every `TitusKirch/scaffold` link, the development setup section                  |
-| `SECURITY.md`                         | Advisory URL, contact email, scope wording                                       |
-| `.github/ISSUE_TEMPLATE/bug_report.yml`, `feature_request.yml`, `question.yml` | Links pointing to `TitusKirch/scaffold` |
-| `.github/pull_request_template.md`    | Example commit message in the title hint                                         |
-| `release-please-config.json`          | `packages["."]["package-name"]`                                                  |
-| `CLAUDE.md`                           | **Delete** and regenerate with `/init` in Claude Code — it's scaffold-specific  |
+## 🗺️ Coverage
 
-> [!TIP]
-> A quick `grep -rn "TitusKirch/scaffold" .` catches every reference in one sweep.
+**~57 resources + ~83 data sources** — every manageable entity of the new
+org-scoped Forge API (pure action endpoints like reboot/restart/deploy-trigger
+are intentionally excluded). All schemas compile and load (`tofu validate`);
+**reads** are verified against the live API.
 
-## 🔁 Resetting release-please
+- **Servers** — server, PHP versions & config (cli/fpm/pool/opcache, max upload/exec), network, logs.
+- **Sites** — site, environment, deployments (script, key, push-to-deploy, history), commands, workers, redirect & security rules, SSL certificates, load balancing, webhooks, and integration toggles (`octane`, `horizon`, `pulse`, `reverb`, `laravel-scheduler`, `laravel-maintenance`, `inertia`).
+- **Services** — daemons (background processes), scheduled jobs, firewall rules, databases, database users, database backups, nginx templates, monitors, SSH keys.
+- **Organization** — teams, roles & permissions, recipes, storage providers, server credentials, VPCs.
+- **Read-only data sources** — providers / regions / sizes, organizations, current user, plus a singular + (where available) reads for everything above.
 
-`scaffold` ships with an initial manifest pinned at `0.0.0`. For most cases you can leave it alone — release-please will simply propose a first release PR after your first conventional commit on `main`. If you want a truly clean slate:
+> [!IMPORTANT]
+> **Writes (create/update/delete) are not yet acceptance-tested.** Routes and
+> field shapes come from the live API + the official OpenAPI spec, but the
+> verification token was read-only, so `Create`/`Update`/`Delete` need a
+> write-scoped token to validate. Treat resources as **beta** until then.
+> Only scalar attributes are mapped so far; nested object/array fields are a
+> follow-up.
 
-1. **Manifest** — make sure `.release-please-manifest.json` is `{ ".": "0.0.0" }` (the default).
-2. **Changelog** — delete `CHANGELOG.md` if your fresh repo somehow inherited one.
-3. **Config** — update `release-please-config.json` → `packages["."]["package-name"]` to your repo name.
-4. **Workflow permissions** — in **Settings → Actions → General → Workflow permissions**, enable **Read and write permissions** so release-please can open its PR.
-5. **Tags & releases (optional)** — if you copied the repo with history, drop old tags:
+## 🔐 Security
 
-   ```bash
-   git tag -l | xargs -r git tag -d
-   ```
-
-   …and clear any stale entries on the GitHub **Releases** tab.
-
-6. **First commit** — push a Conventional Commit on `main` (`feat: …`, `fix: …`). release-please opens the initial release PR; merge it and your first tagged release ships.
-
-## 💡 Why "scaffold" and not "template-\*"
-
-Single word, brandable, language-neutral. Future stack-specific templates can sit next to it as `scaffold-laravel`, `scaffold-nuxt`, etc.
+Found a vulnerability? Please **don't** open a public issue — follow [SECURITY.md](SECURITY.md).
 
 ## 🤝 Contributing
 
