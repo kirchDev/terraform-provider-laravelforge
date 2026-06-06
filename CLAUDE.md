@@ -4,43 +4,75 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this repo is
 
-`scaffold` is a **GitHub template repository**, not an application. It ships the meta layer (lint, format, commit hooks, CI, CodeQL, Dependabot, release-please, issue/PR templates, standard meta docs) that every new kirchDev repo should start with. There is no application code — the project code can be anything (PHP, Go, Rust, Vue, shell). Only the meta layer lives here.
+A first-party **OpenTofu / Terraform provider for [Laravel Forge](https://forge.laravel.com)**, owned by kirchDev. It manages Forge resources (servers, sites, databases, SSL certificates, daemons, scheduled jobs, …) as code so the Forge estate can live in the same IaC workflow as the rest of the kirchDev infrastructure.
 
-Implication: when changing files, ask "does this default make sense for _every_ future repo created from this template?" — not just for one project type.
+- **Provider type (HCL):** `laravelforge` → `provider "laravelforge" {}`
+- **OpenTofu registry address:** `kirchdev/laravelforge`
+- **Go module:** `github.com/kirchDev/terraform-provider-laravelforge`
+- **SDK:** `terraform-plugin-framework` (NOT the legacy SDKv2)
+
+The repo name format `NAMESPACE/terraform-provider-NAME` is **mandatory** for the OpenTofu/Terraform registry — it's not a style choice.
+
+> [!IMPORTANT]
+> **Read `TEMP_AI.md` first.** It is the live build runbook: current status, the scaffold→Go conversion checklist, the OpenAPI-codegen plan, the resource roadmap, and the release/registry steps. Delete it once the build is real and its facts have moved into this file + the README.
+
+## Current state (early)
+
+Two layers coexist:
+
+- **Node meta layer** (kept from the `scaffold` template): pnpm + oxlint + oxfmt + husky + commitlint + release-please + CI/CodeQL/Dependabot + issue/PR templates. Lints config/docs (JSON/YAML/MD).
+- **Go provider** (added on top): `go.mod` (`terraform-plugin-framework`), `main.go`, `internal/client/` (generic JSON:API client: `Get`/`List`/`Write`/`Delete`/`NotFound`), and `internal/provider/` with **~57 resources + ~83 data sources** covering essentially the full manageable surface of the new org-scoped API (servers + PHP/network/logs, sites + env/deployments/commands/workers/rules/SSL/load-balancing/webhooks/integration-toggles, databases + users + backups, daemons, scheduled jobs, firewall rules, nginx templates, monitors, SSH keys, recipes, teams, roles & permissions, storage providers, server credentials, VPCs; read-only data sources for providers/regions/sizes, organizations, current user, etc.). Pure action endpoints (reboot/restart/deploy-trigger) are intentionally excluded. Everything **builds** (`go build ./...`), **vets**, and **loads** (`tofu validate` green across all ~140 schemas); **reads** are verified against the live API.
+
+Still pending (see `TEMP_AI.md`): **write paths are not acceptance-tested** (read-only discovery token — Create/Update/Delete need a write-scoped token); list data sources; OpenAPI-driven codegen; tfplugindocs; the goreleaser + GPG release workflow; per-entity field fidelity (object/array attributes were skipped this pass).
+
+Pattern: `internal/client/client.go` + the `site_*`/`server_data_source.go` files are the canonical exemplars new entities follow. Single-resource read paths come from the list response's `links.self` (not always `{parent}/{group}/{id}`); writes send a flat JSON body; only scalar attributes are mapped.
+
+> [!NOTE]
+> The API shape is **verified against the live API (2026-06-06)**: it's strict JSON:API — single resource is `{"data": {"id": "<string>", "type": "servers", "attributes": {...}}}`, with the real fields under `attributes` (where `id` is numeric). Org-scoped paths confirmed (`/api/orgs/{org}/servers/{id}`, org slug `kirchdev`). Auth is `Authorization: Bearer <token>`.
 
 ## Commands
 
-| Command           | What it does                                               |
-| :---------------- | :--------------------------------------------------------- |
-| `pnpm install`    | Install deps and wire husky hooks via the `prepare` script |
-| `pnpm lint`       | `oxlint . --deny-warnings`                                 |
-| `pnpm format`     | `oxfmt --check .` (note: `format` is the check, not fix)   |
-| `pnpm check`      | Runs `lint` + `format` — the CI gate                       |
-| `pnpm lint:fix`   | Auto-fix lint                                              |
-| `pnpm format:fix` | Auto-fix format                                            |
-| `pnpm check:fix`  | Auto-fix lint + format                                     |
-| `pnpm taze`       | Interactive dependency upgrade check                       |
-| `pnpm taze:w`     | Write upgrade results                                      |
+Go (via `GNUmakefile`; needs Go ≥ 1.25 — `terraform-plugin-framework v1.19` requires it):
 
-There is no test suite — this is config-only. CI runs `pnpm lint` and `pnpm format` on PR.
+| Command        | What it does                                                       |
+| :------------- | :----------------------------------------------------------------- |
+| `make build`   | `go build -o terraform-provider-laravelforge .`                    |
+| `make tidy`    | `go mod tidy` (refresh deps + `go.sum`)                            |
+| `make vet`     | `go vet ./...`                                                      |
+| `make fmt`     | `gofmt -s -w .`                                                    |
+| `make test`    | `go test ./...`                                                    |
+| `make testacc` | `TF_ACC=1 go test ./...` — hits the real Forge API, needs `FORGE_TOKEN` |
 
-## Architecture / conventions
+Node meta layer: `pnpm install` (wires husky hooks), `pnpm check` / `pnpm check:fix` (oxlint + oxfmt over JSON/YAML/MD — the CI gate for non-Go files).
 
-- **Node 24, pnpm 11.** Pinned via `.nvmrc`, `engines`, and `packageManager`. `.npmrc` enforces `minimumReleaseAge=4320` (3-day cooldown), `trustPolicy=no-downgrade`, isolated node-linker. Don't loosen these without reason.
-- **oxc, not eslint/prettier.** Linting via `oxlint`, formatting via `oxfmt`. Configs live in `.oxlintrc.json` / `.oxfmtrc.json`. `oxlint` uses `unicorn` + `oxc` plugins; rules deliberately minimal.
-- **Husky hooks** (`.husky/pre-commit`, `.husky/commit-msg`) run `lint-staged` and `commitlint`. `lint-staged.config.js` excludes `README.md` (free-form prose) and `pnpm-lock.yaml`. `oxlint --fix --deny-warnings` then `oxfmt` on JS; `oxfmt` only on JSON/YAML/MD.
-- **Conventional Commits enforced** via `@commitlint/config-conventional`. Don't `--no-verify` unless explicitly asked.
-- **release-please is included** (unlike many templates that omit it). Files: `release-please-config.json`, `.release-please-manifest.json`, `.github/workflows/release-please.yml`. Config uses `release-type: simple` (language-agnostic), `include-v-in-tag: true`. Downstream repos start at `0.0.0` and reset via the steps in README → _Resetting release-please_.
-- **Workflows** use `actions/checkout@v6`, `actions/setup-node@v6`, `pnpm/action-setup@v6`, `github/codeql-action/{init,analyze}@v4`. Keep these pinned to major versions; Dependabot bumps them monthly.
-- **CodeQL** scans `actions` + `javascript-typescript` with `security-extended,security-and-quality` queries, gated by path filters so non-code changes don't trigger it.
-- **Dependabot** groups all minor/patch updates per ecosystem into a single PR (`npm-minor-patch`, `actions-minor-patch`). Majors come as separate PRs.
+### Manual smoke test (loads the binary in OpenTofu)
 
-## House style for READMEs and meta files
+```bash
+make build
+cat > /tmp/lf.tfrc <<EOF
+provider_installation {
+  dev_overrides { "kirchdev/laravelforge" = "$(pwd)" }
+  direct {}
+}
+EOF
+TF_CLI_CONFIG_FILE=/tmp/lf.tfrc tofu -chdir=path/to/example validate
+```
 
-`/write-readme` skill encodes the canonical structure. Key rules: hero block wrapped in `<div align="center">`, prescribed section emojis (✨ Features, 🚀 Setup, 🤝 Contributing, 🛣️ Versioning, 📄 License), license footer always reads `[MIT](LICENSE) © [Titus Kirch](https://github.com/TitusKirch/) / [IT-Dienstleistungen Titus Kirch](https://kirch.dev)`. Use GitHub callouts (`> [!TIP]`, `> [!IMPORTANT]`), never plain blockquotes.
+`validate` exercises the schema without calling the API; `plan`/`apply` would call the data source's `Read` and need a real `FORGE_TOKEN`.
 
-## When editing this template
+## Conventions
 
-- Every file referencing `TitusKirch/scaffold` is a placeholder that downstream users will replace. Keep the references consistent so a single `grep -rn "TitusKirch/scaffold"` catches them all.
-- `forgemap` (sibling repo at `../forgemap`) is the de-facto reference implementation of these conventions. When unsure about a config choice, check what forgemap does.
-- The template's own `package.json` is `"private": true` and `"name": "scaffold"` — not published anywhere.
+- **Conventional Commits enforced** via commitlint on `git commit`. Don't `--no-verify` unless explicitly asked.
+- **release-please** owns versioning + CHANGELOG + the release tag. During the Go conversion, switch `release-type` from `node` to `simple` (or `go`) and let the tag trigger a goreleaser workflow that builds + **GPG-signs** the provider artifacts.
+- **Pre-1.0.** Schemas/behaviour may change; the consuming infra repo pins this provider **exactly**.
+- **House style** for READMEs/meta files: the `/write-readme` skill encodes it — centered hero block, prescribed section emojis (✨ 📦 🚀 🤝 🛣️ 📄), GitHub callouts (`> [!TIP]`), license footer `[MIT](LICENSE) © [Titus Kirch](https://github.com/TitusKirch/) / [IT-Dienstleistungen Titus Kirch](https://kirch.dev)`.
+
+## Build approach (summary — full detail in TEMP_AI.md)
+
+1. **Generate** a Go API client + TF Framework schemas from Forge's OpenAPI spec (`terraform-plugin-codegen-openapi` → `-framework`). This is the lever — it's what `madewithlove/laravelforge` half-did and abandoned.
+2. **Write the CRUD glue** per resource and **register** each in `provider.go` `Resources()`/`DataSources()` — the exact step the upstream stub never completed (its `Resources()` returns an empty slice).
+3. **Vertical slice first:** `laravelforge_server` + `laravelforge_site` end-to-end with one acceptance test, then expand resource by resource.
+
+## Don't relitigate
+
+The decision to build our own provider (rather than use `madewithlove/laravelforge` — a non-functional stub — or `tonning/laravelforge` — working but thin and ~18 mo unmaintained) and the naming/registry choices are settled. Background lives in the infra repo's `tf-service-expansion-eval` memory and in `TEMP_AI.md`.
