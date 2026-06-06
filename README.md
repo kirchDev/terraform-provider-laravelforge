@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🏗️ terraform-provider-laravelforge
+# 🛠️ terraform-provider-laravelforge
 
 **Manage your entire [Laravel Forge](https://forge.laravel.com) estate as code — servers, sites, databases, daemons, SSL & more, reconciled by OpenTofu**
 
