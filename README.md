@@ -6,7 +6,8 @@
 
 [![Release](https://img.shields.io/github/v/release/kirchDev/terraform-provider-laravelforge?style=flat-square&label=release&color=10b981)](https://github.com/kirchDev/terraform-provider-laravelforge/releases/latest)
 [![Status: beta](https://img.shields.io/badge/status-beta-f59e0b?style=flat-square)](https://github.com/kirchDev/terraform-provider-laravelforge/releases)
-[![Terraform Registry](https://img.shields.io/badge/registry-kirchdev%2Flaravelforge-7b42bc?style=flat-square&logo=terraform&logoColor=white)](https://registry.terraform.io/providers/kirchDev/laravelforge/latest)
+[![OpenTofu Registry](https://img.shields.io/badge/opentofu-kirchdev%2Flaravelforge-FFDA18?style=flat-square&logo=opentofu&logoColor=black)](https://search.opentofu.org/provider/kirchdev/laravelforge/latest)
+[![Terraform Registry](https://img.shields.io/badge/terraform-kirchdev%2Flaravelforge-7b42bc?style=flat-square&logo=terraform&logoColor=white)](https://registry.terraform.io/providers/kirchDev/laravelforge/latest)
 [![Tests](https://img.shields.io/github/actions/workflow/status/kirchDev/terraform-provider-laravelforge/ci.yml?branch=main&style=flat-square&label=tests)](https://github.com/kirchDev/terraform-provider-laravelforge/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/github/license/kirchDev/terraform-provider-laravelforge?style=flat-square&color=10b981)](LICENSE)
 
