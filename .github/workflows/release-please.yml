@@ -30,7 +30,7 @@ jobs:
           access_token: ${{ secrets.BWS_ACCESS_TOKEN }}
           cloud_region: eu
           secrets: |
-            29f8317d-29f7-46af-834b-b4550012d477 > KIRCHDEV_RELEASE_APP_PEM
+            3a3459f0-c986-4ff3-a36b-b4550012d41e > KIRCHDEV_RELEASE_APP_PEM
 
       - name: Mint Release App token
         id: app-token
@@ -63,32 +63,31 @@ jobs:
         with:
           ref: ${{ needs.release-please.outputs.tag_name }}
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
           cache: true
 
-      # GPG signing key + passphrase live in Bitwarden SM, same flow as the
-      # Release App PEM above. One-time setup: create the two secrets in BWS and
-      # replace the placeholder IDs below.
+      # GPG signing key + passphrase live in Bitwarden SM (project: infrastructure),
+      # same flow as the Release App PEM above.
       - name: Fetch GPG signing secrets from Bitwarden
         uses: bitwarden/sm-action@27c0c9dcab679d7250dbab91227c85b49ffa5e0f # v3.0.0
         with:
           access_token: ${{ secrets.BWS_ACCESS_TOKEN }}
           cloud_region: eu
           secrets: |
-            REPLACE_WITH_BWS_GPG_PRIVATE_KEY_ID > GPG_PRIVATE_KEY
-            REPLACE_WITH_BWS_GPG_PASSPHRASE_ID > GPG_PASSPHRASE
+            9112a29e-4a70-4c88-a6a7-b462014541e4 > GPG_PRIVATE_KEY
+            aa38c7e5-6d49-4204-a42b-b4620144bcc9 > GPG_PASSPHRASE
 
       - name: Import GPG key
         id: import_gpg
-        uses: crazy-max/ghaction-import-gpg@e89d40939c28e39f97cf32126055eeae86ba74ec # v6
+        uses: crazy-max/ghaction-import-gpg@2dc316deee8e90f13e1a351ab510b4d5bc0c82cd # v7.0.0
         with:
           gpg_private_key: ${{ env.GPG_PRIVATE_KEY }}
           passphrase: ${{ env.GPG_PASSPHRASE }}
 
       - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@e435ccd777264be153ace6237001ef4d979d3a7a # v6
+        uses: goreleaser/goreleaser-action@5daf1e915a5f0af01ddbcd89a43b8061ff4f1a89 # v7.2.2
         with:
           version: '~> v2'
           args: release --clean
