@@ -25,3 +25,6 @@ terraform.rc
 
 # Forge OpenAPI spec (reference for codegen, not shipped)
 .forge-openapi.json
+
+# Local session handoff (AI pickup runbook, not shipped)
+session.md
