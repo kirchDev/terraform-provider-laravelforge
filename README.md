@@ -4,9 +4,11 @@
 
 **Manage your entire [Laravel Forge](https://forge.laravel.com) estate as code — servers, sites, databases, daemons, SSL & more, reconciled by OpenTofu**
 
-[![Status: beta](https://img.shields.io/badge/status-beta-f59e0b?style=flat-square)](https://github.com/kirchDev/terraform-provider-laravelforge)
-[![CI](https://img.shields.io/github/actions/workflow/status/kirchDev/terraform-provider-laravelforge/ci.yml?branch=main&style=flat-square&label=ci)](https://github.com/kirchDev/terraform-provider-laravelforge/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/license-MIT-10b981?style=flat-square)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/kirchDev/terraform-provider-laravelforge?style=flat-square&label=release&color=10b981)](https://github.com/kirchDev/terraform-provider-laravelforge/releases/latest)
+[![Status: beta](https://img.shields.io/badge/status-beta-f59e0b?style=flat-square)](https://github.com/kirchDev/terraform-provider-laravelforge/releases)
+[![Terraform Registry](https://img.shields.io/badge/registry-kirchdev%2Flaravelforge-7b42bc?style=flat-square&logo=terraform&logoColor=white)](https://registry.terraform.io/providers/kirchDev/laravelforge/latest)
+[![Tests](https://img.shields.io/github/actions/workflow/status/kirchDev/terraform-provider-laravelforge/ci.yml?branch=main&style=flat-square&label=tests)](https://github.com/kirchDev/terraform-provider-laravelforge/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/github/license/kirchDev/terraform-provider-laravelforge?style=flat-square&color=10b981)](LICENSE)
 
 </div>
 
@@ -24,7 +26,7 @@ resource "laravelforge_site" "app" {
 That's it. Servers, sites, databases, daemons and SSL declared in HCL and reconciled by OpenTofu — not clicked together in a dashboard.
 
 > [!IMPORTANT]
-> **Pre-1.0 / beta.** Built against the new org-scoped Forge JSON:API. All schemas load and **reads are verified against the live API**, but **writes (create/update/delete) are not yet acceptance-tested** and only scalar attributes are mapped — pin an exact version and test before relying on it. Not yet on the OpenTofu registry.
+> **Pre-1.0 / beta.** Built against the new org-scoped Forge JSON:API. Reads are verified against the live API; **writes (create/update/delete) are exercised by mock acceptance tests but not yet verified against the *live* API**, and only scalar attributes are mapped — pin an exact version and test before relying on it.
 
 ## 📦 Install & run
 
@@ -56,14 +58,11 @@ export FORGE_TOKEN="forge_xxx"   # Forge → Account → API
 tofu plan
 ```
 
-> [!NOTE]
-> Until the first registry release, install via a local/network mirror or a `dev_overrides` block pointing at a locally built binary (`make build`).
-
 ## ✨ Features
 
 - **🏗️ Forge as code** — servers, sites, databases, daemons, scheduled jobs, SSL and more in HCL.
 - **🧩 Full API coverage** — ~57 resources + ~83 data sources across essentially every manageable Forge entity.
-- **🚀 OpenTofu-native** — `kirchdev/laravelforge`; Terraform-compatible.
+- **🚀 OpenTofu & Terraform** — published as `kirchdev/laravelforge` on both registries.
 - **🔐 Simple auth** — one Forge token via `token` or `FORGE_TOKEN`.
 - **⚡ Modern stack** — `terraform-plugin-framework`; docs generated from the schema.
 
