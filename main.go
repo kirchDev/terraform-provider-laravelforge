@@ -24,7 +24,7 @@ func main() {
 	flag.Parse()
 
 	opts := providerserver.ServeOpts{
-		// OpenTofu registry address — see TEMP_AI.md / CLAUDE.md.
+		// OpenTofu registry address — see CLAUDE.md.
 		Address: "registry.opentofu.org/kirchdev/laravelforge",
 		Debug:   debug,
 	}

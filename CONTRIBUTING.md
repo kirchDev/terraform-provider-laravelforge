@@ -15,13 +15,12 @@ This project follows the [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.
 
 ## Development setup
 
-> [!NOTE]
-> This repo currently ships the kirchDev meta layer (lint/format/hooks/release tooling). The Go provider code and its toolchain are being added — see `TEMP_AI.md` for the conversion plan. Until then the commands below cover the meta layer.
+Requirements:
 
-Requirements (meta layer):
-
-- Node **24+** and **pnpm 11**
-- `git`
+- **Go 1.25+** (the provider — `terraform-plugin-framework v1.19` needs it) and `golangci-lint`
+- Node **24+** and **pnpm 11** (the meta layer: lint/format/hooks/release tooling)
+- `git`; OpenTofu or Terraform to load the built binary
+- A Forge API token (`FORGE_TOKEN`) for acceptance tests (`make testacc`)
 
 Clone and install:
 
@@ -29,14 +28,16 @@ Clone and install:
 git clone https://github.com/kirchDev/terraform-provider-laravelforge.git
 cd terraform-provider-laravelforge
 pnpm install   # wires husky hooks
+make build     # builds the provider binary
 ```
-
-Once the Go provider lands you'll also need Go (see `go.mod`), `golangci-lint`, and a Forge API token (`FORGE_TOKEN`) for acceptance tests.
 
 ## Running the suite
 
 | Command          | What it does                              |
 | :--------------- | :---------------------------------------- |
+| `make build`     | Build the provider binary.                |
+| `make vet`       | `go vet ./...`.                           |
+| `make test`      | Go unit tests.                            |
 | `pnpm lint`      | oxlint across the repo.                   |
 | `pnpm format`    | oxfmt check across JS / JSON / YAML / MD. |
 | `pnpm check`     | Runs `lint` and `format`.                 |

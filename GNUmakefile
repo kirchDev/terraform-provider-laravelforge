@@ -30,7 +30,9 @@ docs:
 test:
 	go test ./... -timeout 120s
 
-# Acceptance tests hit the real Forge API; requires FORGE_TOKEN.
+# Acceptance tests drive the provider through a full CRUD/import cycle against an
+# in-memory mock of the Forge API — no token. Needs a TF binary (tofu/terraform);
+# the harness auto-discovers tofu on PATH, or set TF_ACC_TERRAFORM_PATH.
 testacc:
 	TF_ACC=1 go test ./... -v -timeout 120m
 
