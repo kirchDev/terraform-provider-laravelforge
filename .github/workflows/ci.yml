@@ -39,3 +39,46 @@ jobs:
 
       - name: Format check
         run: pnpm format
+
+  go:
+    name: Go Build & Test
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Format check
+        run: |
+          unformatted=$(gofmt -s -l .)
+          if [ -n "$unformatted" ]; then
+            echo "::error::These files are not gofmt-formatted:"
+            echo "$unformatted"
+            exit 1
+          fi
+
+      - name: Vet
+        run: go vet ./...
+
+      - name: Build
+        run: go build ./...
+
+      - name: Test
+        run: go test ./...
+
+      # Acceptance tests run the real provider through a full apply/refresh/
+      # import/destroy cycle against an in-memory mock of the Forge API (no token,
+      # no real Forge). The terraform-plugin-testing harness needs a TF binary.
+      - name: Install OpenTofu
+        uses: opentofu/setup-opentofu@9d84900f3238fab8cd84ce47d658d25dd008be2f # v1
+        with:
+          tofu_wrapper: false
+
+      - name: Acceptance tests (mock API)
+        env:
+          TF_ACC: '1'
+        run: go test ./internal/provider/ -run TestAcc -timeout 10m
