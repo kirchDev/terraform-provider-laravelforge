@@ -1,0 +1,80 @@
+package provider
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+
+	"github.com/kirchDev/terraform-provider-laravelforge/internal/client"
+)
+
+var (
+	_ datasource.DataSource              = (*siteDeployKeyDataSource)(nil)
+	_ datasource.DataSourceWithConfigure = (*siteDeployKeyDataSource)(nil)
+)
+
+// NewSiteDeployKeyDataSource returns a new laravelforge_site_deploy_key data source.
+func NewSiteDeployKeyDataSource() datasource.DataSource {
+	return &siteDeployKeyDataSource{}
+}
+
+type siteDeployKeyDataSource struct {
+	client *client.Client
+}
+
+type siteDeployKeyDataSourceModel struct {
+	Organization types.String `tfsdk:"organization"`
+	ServerID     types.Int64  `tfsdk:"server_id"`
+	SiteID       types.Int64  `tfsdk:"site_id"`
+	Key          types.String `tfsdk:"key"`
+}
+
+func (d *siteDeployKeyDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_site_deploy_key"
+}
+
+func (d *siteDeployKeyDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		MarkdownDescription: "Fetches the deploy key for a Laravel Forge site.",
+		Attributes: map[string]schema.Attribute{
+			"organization": schema.StringAttribute{MarkdownDescription: "Organization slug.", Required: true},
+			"server_id":    schema.Int64Attribute{MarkdownDescription: "ID of the server that owns the site.", Required: true},
+			"site_id":      schema.Int64Attribute{MarkdownDescription: "ID of the site the deploy key belongs to.", Required: true},
+			"key":          schema.StringAttribute{MarkdownDescription: "The public deploy key for the site.", Computed: true},
+		},
+	}
+}
+
+func (d *siteDeployKeyDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+	if req.ProviderData == nil {
+		return
+	}
+	c, ok := req.ProviderData.(*client.Client)
+	if !ok {
+		resp.Diagnostics.AddError("Unexpected Data Source Configure Type", fmt.Sprintf("Expected *client.Client, got: %T.", req.ProviderData))
+		return
+	}
+	d.client = c
+}
+
+func (d *siteDeployKeyDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	var data siteDeployKeyDataSourceModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	path := fmt.Sprintf("/api/orgs/%s/servers/%d/sites/%d/deploy-key", data.Organization.ValueString(), data.ServerID.ValueInt64(), data.SiteID.ValueInt64())
+	var a siteDeployKeyAttributes
+	if _, err := d.client.Get(ctx, path, &a); err != nil {
+		resp.Diagnostics.AddError("Unable to read Forge site deploy key", err.Error())
+		return
+	}
+
+	data.Key = types.StringPointerValue(a.Key)
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+}

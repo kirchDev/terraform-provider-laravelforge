@@ -1,6 +1,6 @@
 <!--
 Thanks for contributing! Please fill out the sections below.
-Title should follow Conventional Commits (e.g. "feat: add release-please workflow").
+Title should follow Conventional Commits (e.g. "feat(server): add laravelforge_server resource").
 -->
 
 ## Summary

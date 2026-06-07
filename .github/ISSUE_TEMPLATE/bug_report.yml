@@ -1,18 +1,27 @@
 name: 🐛 Bug report
-description: Something in the template isn't working as expected
+description: Something in the provider isn't working as expected
 labels: ['bug', 'triage']
 body:
   - type: markdown
     attributes:
       value: |
         Thanks for taking the time to report a bug. Please fill out the form below.
-        For security vulnerabilities, see [SECURITY.md](https://github.com/TitusKirch/scaffold/blob/main/SECURITY.md) instead.
+        For security vulnerabilities, see [SECURITY.md](https://github.com/kirchDev/terraform-provider-laravelforge/blob/main/SECURITY.md) instead.
 
   - type: input
-    id: file
+    id: resource
     attributes:
-      label: Affected file / template
-      placeholder: e.g. .github/workflows/ci.yml
+      label: Affected resource / data source
+      placeholder: e.g. laravelforge_server
+    validations:
+      required: true
+
+  - type: input
+    id: versions
+    attributes:
+      label: Versions
+      description: Provider version + OpenTofu/Terraform version.
+      placeholder: e.g. provider 0.2.0, OpenTofu 1.8.3
     validations:
       required: true
 
