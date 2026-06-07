@@ -68,17 +68,16 @@ jobs:
           go-version-file: go.mod
           cache: true
 
-      # GPG signing key + passphrase live in Bitwarden SM, same flow as the
-      # Release App PEM above. One-time setup: create the two secrets in BWS and
-      # replace the placeholder IDs below.
+      # GPG signing key + passphrase live in Bitwarden SM (project: infrastructure),
+      # same flow as the Release App PEM above.
       - name: Fetch GPG signing secrets from Bitwarden
         uses: bitwarden/sm-action@27c0c9dcab679d7250dbab91227c85b49ffa5e0f # v3.0.0
         with:
           access_token: ${{ secrets.BWS_ACCESS_TOKEN }}
           cloud_region: eu
           secrets: |
-            REPLACE_WITH_BWS_GPG_PRIVATE_KEY_ID > GPG_PRIVATE_KEY
-            REPLACE_WITH_BWS_GPG_PASSPHRASE_ID > GPG_PASSPHRASE
+            9112a29e-4a70-4c88-a6a7-b462014541e4 > GPG_PRIVATE_KEY
+            aa38c7e5-6d49-4204-a42b-b4620144bcc9 > GPG_PASSPHRASE
 
       - name: Import GPG key
         id: import_gpg
