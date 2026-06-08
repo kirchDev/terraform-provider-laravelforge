@@ -3,6 +3,11 @@
 name: CI
 
 on:
+  # Run on pushes to main too (not just PRs) so the workflow has runs on the
+  # main branch — the tests badge queries those; without them it shows "no status".
+  push:
+    branches:
+      - main
   pull_request:
     branches:
       - main
@@ -20,7 +25,7 @@ jobs:
   lint:
     name: Lint & Format
     runs-on: ubuntu-latest
-    if: github.event.pull_request.draft == false
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     steps:
       - uses: actions/checkout@v6
 
@@ -43,7 +48,7 @@ jobs:
   go:
     name: Go Build & Test
     runs-on: ubuntu-latest
-    if: github.event.pull_request.draft == false
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     steps:
       - uses: actions/checkout@v6
 
