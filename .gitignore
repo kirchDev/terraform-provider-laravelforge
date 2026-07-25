@@ -28,3 +28,4 @@ terraform.rc
 
 # Local session handoff (AI pickup runbook, not shipped)
 session.md
+.claude/settings.local.json
