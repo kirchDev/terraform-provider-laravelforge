@@ -30,7 +30,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6
+      - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6
 
       - uses: actions/setup-node@v6
         with:
@@ -80,7 +80,7 @@ jobs:
       # import/destroy cycle against an in-memory mock of the Forge API (no token,
       # no real Forge). The terraform-plugin-testing harness needs a TF binary.
       - name: Install OpenTofu
-        uses: opentofu/setup-opentofu@847eaa4afeb791b06daa46e8eafa8b1b68d7cfb4 # v2.0.1
+        uses: opentofu/setup-opentofu@a1320f892987e89d278cc92dc5adc984fb93aca4 # v2.0.2
         with:
           tofu_wrapper: false
 
