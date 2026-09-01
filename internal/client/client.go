@@ -153,7 +153,7 @@ func (c *Client) do(ctx context.Context, method, path string, body io.Reader, ou
 	if err != nil {
 		return err
 	}
-	defer res.Body.Close()
+	defer func() { _ = res.Body.Close() }()
 
 	data, err := io.ReadAll(res.Body)
 	if err != nil {
