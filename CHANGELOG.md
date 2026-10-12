@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.2.0](https://github.com/kirchDev/terraform-provider-laravelforge/compare/v0.1.0...v0.2.0) (2026-07-26)
+
+
+### Features
+
+* route questions, ideas and possible bugs to the Discord forum ([1fd53ec](https://github.com/kirchDev/terraform-provider-laravelforge/commit/1fd53ec96caff23b0e48134d8820da4082ac2cd8))
+
+
+### Bug Fixes
+
+* align dependabot labels to the stack: convention ([3b8b664](https://github.com/kirchDev/terraform-provider-laravelforge/commit/3b8b6647263b07fc9b02de74fbe3d199a2ef016c))
+* align issue-template labels with the label catalog ([a3ffe21](https://github.com/kirchDev/terraform-provider-laravelforge/commit/a3ffe215eacf7023c4862d60c92e1b70cd8d2296))
+
 ## 0.1.0 (2026-06-07)
 
 
