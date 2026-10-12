@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.1](https://github.com/kirchDev/terraform-provider-laravelforge/compare/v0.3.0...v0.3.1) (2026-10-12)
+
+
+### Bug Fixes
+
+* **deps:** move to go 1.27 ([d4b384e](https://github.com/kirchDev/terraform-provider-laravelforge/commit/d4b384e556676a3cf83c8804bfd9ecf8a61812bc))
+
 ## [0.3.0](https://github.com/kirchDev/terraform-provider-laravelforge/compare/v0.2.0...v0.3.0) (2026-10-12)
 
 
