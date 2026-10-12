@@ -42,9 +42,9 @@
     "@commitlint/config-conventional": "^21.2.3",
     "husky": "^9.1.7",
     "lint-staged": "^17.6.0",
-    "oxfmt": "0.60.0",
+    "oxfmt": "0.72.0",
     "oxlint": "1.87.0",
-    "taze": "^19.17.2"
+    "taze": "^21.3.0"
   },
   "engines": {
     "node": ">=24"
